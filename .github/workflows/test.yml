@@ -1,25 +1,38 @@
-name: CI
+name: Flask App CI/CD
 
-on: [push, pull_request]
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
-
+    
     steps:
-    - uses: actions/checkout@v2 # Step to check out the code
+    - uses: actions/checkout@v2
+    
     - name: Set up Python
-      uses: actions/setup-python@v2 # Step to set up Python on Window
+      uses: actions/setup-python@v2
       with:
-        python-version: '3.x' # Specify the Python version (e.g., 3.8, 3.9)
-
-    - name: Install dependencies  # Install dependencies
+        python-version: '3.x'
+    
+    - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install Flask flake8 pytest
-
-    - name: Lint with Flake8
-      run: flake8 app.py
-
-    - name: Run unit tests
-      run: python test_app.py 
+        pip install flask pytest requests
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+    
+    - name: Run Unit Tests
+      run: |
+        python -m pytest test_app.py -v
+    
+    - name: Start Flask App
+      run: |
+        python app.py &
+        sleep 5
+      
+    - name: Run Integration Tests
+      run: |
+        python -m pytest integration_test.py -v
